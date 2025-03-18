@@ -21,15 +21,15 @@ jobs:
       - name: Instalar dependencias
         run: |
           pip install -r requirements.txt
+          pip install pyinstaller  # Instalar PyInstaller para crear el ejecutable
 
       - name: Construcción del juego
-        run: python build.py  # Si tienen un script de construcción
+        run: |
+          pyinstaller --onefile --windowed --name=umei main.py
 
-      - name: Subir artefacto de la versión
-        uses: actions/upload-artifact@v3
-        with:
-          name: game-build
-          path: dist/  # Carpeta donde se guarda el ejecutable
+      - name: Comprimir el ejecutable en un ZIP
+        run: |
+          zip -r umei.zip dist/umei.exe assets/ screens/ tilemap/ player.py camera.py intro.py enemies.py consumable.py dialog.py requirements.txt
 
       - name: Instalar Butler
         run: |
@@ -38,12 +38,7 @@ jobs:
           chmod +x butler
           sudo mv butler /usr/local/bin/
 
-      - name: Iniciar sesión en Butler
-        env:
-          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-        run: butler login
-
       - name: Desplegar el juego en Itch.io
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-        run: butler push dist/ usuarioitchio/nombre-juego:win-linux
+        run: butler push umei.zip wachopuffs/umei:windows
